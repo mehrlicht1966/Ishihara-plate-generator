@@ -1,38 +1,42 @@
 import numpy as np
-from PIL import Image
-import random
+import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 
-class IshiharaPlate:
-    def __init__(self, size=(400, 400), dot_radius=15):
+class IshiharaPlateGenerator:
+    def __init__(self, size=(100, 100), dot_color=(0.2, 0.6, 0.2), bg_color=(1, 1, 1)):
         self.size = size
-        self.dot_radius = dot_radius
-        self.image = Image.new('RGB', self.size, (255, 255, 255))
+        self.dot_color = dot_color
+        self.bg_color = bg_color
 
-    def generate_pattern(self, number_of_dots=100, color_blind_type='deuteranopia'):
-        colors = self.get_colors(color_blind_type)
-        for _ in range(number_of_dots):
-            x = random.randint(0, self.size[0])
-            y = random.randint(0, self.size[1])
-            color = random.choice(colors)
-            self.draw_dot(x, y, color)
+    def create_plate(self, displayed_number):
+        # Set plate background color
+        plate = np.ones((self.size[0], self.size[1], 3)) * np.array(self.bg_color)
 
-    def draw_dot(self, x, y, color):
-        for i in range(-self.dot_radius, self.dot_radius):
-            for j in range(-self.dot_radius, self.dot_radius):
-                if i**2 + j**2 <= self.dot_radius**2:
-                    if 0 <= x+i < self.size[0] and 0 <= y+j < self.size[1]:
-                        self.image.putpixel((x+i, y+j), color)
+        # Define dot parameters
+        num_dots = 500
+        dot_radius = 3
 
-    def get_colors(self, color_blind_type):
-        if color_blind_type == 'deuteranopia':
-            return [(255, 0, 0), (0, 0, 255)]  # Example colors for testing
-        return [(0, 255, 0), (255, 255, 0)]  # Normal colors
+        for _ in range(num_dots):
+            y = np.random.randint(0, self.size[0])
+            x = np.random.randint(0, self.size[1])
 
-    def save(self, file_path):
-        self.image.save(file_path)
+            # If within the area for the number, change dot color
+            if self.is_in_number_area(x, y, displayed_number):
+                plate[y-dot_radius:y+dot_radius, x-dot_radius:x+dot_radius] = np.array(self.dot_color)
 
+        return plate
+
+    def is_in_number_area(self, x, y, number):
+        # Simplified function to check if coordinates fall within the area of the number
+        # This would typically be more complex and involve the number's actual pixels
+        return (number == "1" and (30 < x < 70) and (30 < y < 70))
+
+    def display_plate(self, plate):
+        plt.imshow(plate)
+        plt.axis('off')
+        plt.show()
 
 if __name__ == '__main__':
-    plate = IshiharaPlate()
-    plate.generate_pattern()
-    plate.save('ishihara_plate.png')
+    generator = IshiharaPlateGenerator()
+    plate = generator.create_plate(displayed_number='1')
+    generator.display_plate(plate)
